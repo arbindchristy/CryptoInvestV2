@@ -38,12 +38,21 @@ class Settings:
     pivot_window: int = 3
     csv_path: str | None = None
     fee_rate: float = 0.0
+    redis_url: str | None = None
+    snapshot_file_path: str = "data/latest_signal.json"
+    snapshot_redis_key: str = "cryptoinvest:latest_signal"
+    interval_seconds: int = 300
+    ohlcv_limit: int = 300
+    api_host: str = "0.0.0.0"
+    api_port: int = 8000
 
 
 def load_settings() -> Settings:
     """Load settings from environment variables."""
     csv_path = os.getenv("CRYPTOINVEST_CSV_PATH")
     csv_value = csv_path.strip() if csv_path and csv_path.strip() else None
+    redis_url = os.getenv("REDIS_URL") or os.getenv("CRYPTOINVEST_REDIS_URL")
+    redis_value = redis_url.strip() if redis_url and redis_url.strip() else None
     return Settings(
         symbol=_env_str("CRYPTOINVEST_SYMBOL", "BTC/USDT"),
         timeframe=_env_str("CRYPTOINVEST_TIMEFRAME", "4h"),
@@ -56,4 +65,15 @@ def load_settings() -> Settings:
         pivot_window=_env_int("CRYPTOINVEST_PIVOT_WINDOW", 3),
         csv_path=csv_value,
         fee_rate=_env_float("CRYPTOINVEST_FEE_RATE", 0.0),
+        redis_url=redis_value,
+        snapshot_file_path=_env_str(
+            "CRYPTOINVEST_SNAPSHOT_FILE", "data/latest_signal.json"
+        ),
+        snapshot_redis_key=_env_str(
+            "CRYPTOINVEST_SNAPSHOT_REDIS_KEY", "cryptoinvest:latest_signal"
+        ),
+        interval_seconds=_env_int("INTERVAL_SECONDS", 300),
+        ohlcv_limit=_env_int("CRYPTOINVEST_OHLCV_LIMIT", 300),
+        api_host=_env_str("API_HOST", "0.0.0.0"),
+        api_port=_env_int("API_PORT", 8000),
     )

@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["python", "scripts/run_api.py"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      CRYPTOINVEST_SNAPSHOT_FILE: /app/data/latest_signal.json
+      INTERVAL_SECONDS: 300
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+    volumes:
+      - snapshot_data:/app/data
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["python", "scripts/run_worker.py"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      CRYPTOINVEST_SYMBOL: BTC/USDT
+      CRYPTOINVEST_TIMEFRAME: 4h
+      CRYPTOINVEST_EXCHANGE: binance
+      CRYPTOINVEST_OHLCV_LIMIT: 300
+      INTERVAL_SECONDS: 300
+      CRYPTOINVEST_SNAPSHOT_FILE: /app/data/latest_signal.json
+      CRYPTOINVEST_PIVOT_WINDOW: 3
+    volumes:
+      - snapshot_data:/app/data
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  snapshot_data:
